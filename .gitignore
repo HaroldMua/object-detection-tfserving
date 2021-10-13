@@ -1,6 +1,3 @@
 .idea
 
-# ignore all
-tf-serve/model
-
 backend/data_source/test.mp4
