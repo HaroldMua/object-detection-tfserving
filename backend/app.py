@@ -92,7 +92,7 @@ def save_detection(classname, image):
 
 
 def retrieve_frames(cap):
-    # global frame_counter
+    global frame_counter
     frame_counter = 0
 
     print("Retrieving frames")
