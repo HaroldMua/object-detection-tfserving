@@ -53,7 +53,7 @@ app = Flask(__name__)
 @app.route("/")
 def index():
     """ Return the rendered template """
-    return render_template("index.html")
+    return render_template("index1.html")
 
 # ---------------------------------------------------------------------------------------------------
 
@@ -229,14 +229,25 @@ def generate():
                 continue
         # yield the output frame in the byte format
         yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' +
-               bytearray(encodedImage) + b'\r\n')
+               encodedImage.tobytes() + b'\r\n')
 
 
-@app.route("/video_feed")
-def video_feed():
-    # return the response generated along with the specific media type (mime type)
-    return Response(generate(),
-                    mimetype="multipart/x-mixed-replace; boundary=frame")
+# @app.route("/video_feed")
+# def video_feed():
+#     # return the response generated along with the specific media type (mime type)
+#     return Response(generate(),
+#                     mimetype="multipart/x-mixed-replace; boundary=frame")
+
+@app.route('/video_feed/<feed_type>')
+def video_feed(feed_type):
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    if feed_type == 'Camera_0':
+        return Response(generate(),
+                        mimetype="multipart/x-mixed-replace; boundary=frame")
+
+    elif feed_type == 'Camera_1':
+        return Response(generate(),
+                        mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
 if __name__ == '__main__':
@@ -290,7 +301,7 @@ if __name__ == '__main__':
         )
         th_detect_object.start()
 
-        app.run(host='0.0.0.0', threaded=True)
+        app.run(host='0.0.0.0', port=8000, threaded=True)
 
 
 
