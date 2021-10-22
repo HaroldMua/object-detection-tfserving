@@ -23,15 +23,15 @@
 	</style>
   </head>
   <body>
-  	<h1>Multi-camera with SSD</h1>
+  	<h1>Multi-camera object detection</h1>
   	<div class="clearfix">
   		<div class="img-container" align="center">
         	<p align="center">Live stream 1</p>
-        	<img src="{{ url_for('video_feed', feed_type='Camera_0') }}" class="center"  style="border:1px solid black;width:100%" alt="Live Stream 1">
+        	<img src="{{ url_for('video_feed', feed_type='camera_opencv', device=0) }}" class="center"  style="border:1px solid black;width:100%" alt="Live Stream 1">
   		</div>
   		<div class="img-container" align="center">
         	<p align="center">Live stream 2</p>
-        	<img src="{{ url_for('video_feed', feed_type='Camera_1') }}" class="center"  style="border:1px solid black;width:100%" alt="Live Stream 2">
+        	<img src="{{ url_for('video_feed', feed_type='camera_ip', device=1) }}" class="center"  style="border:1px solid black;width:100%" alt="Live Stream 2">
   		</div>
 	</div>
   </body>
