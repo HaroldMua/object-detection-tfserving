@@ -4,7 +4,7 @@ import pickle
 import requests
 import sys
 import time
-from backend.object_detection.utils import visualization_utils as vis_util
+from inference_client.object_detection.utils import visualization_utils as vis_util
 
 
 class Detection:
