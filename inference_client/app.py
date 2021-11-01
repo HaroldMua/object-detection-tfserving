@@ -10,7 +10,7 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     """Video streaming home page."""
-    return render_template('index1.html')
+    return render_template('index2.html')
 
 
 def gen(camera_stream, feed_type, device):
@@ -41,20 +41,20 @@ def gen(camera_stream, feed_type, device):
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 
-@app.route('/video_feed/<feed_type>/<device>')
-def video_feed(feed_type, device):
+@app.route('/video_feed/<feed_type>/<device>/<video_source>')
+def video_feed(feed_type, device, video_source):
     """Video streaming route. Put this in the src attribute of an img tag."""
     if feed_type == "camera_opencv":
         # video_source = "rtsp://admin:admin@192.168.11.103:8554/live"
-        video_source = 0
+        # video_source = 0
         camera_stream = import_module('camera_opencv').Camera
-        return Response(gen(camera_stream=camera_stream(feed_type, device, video_source), feed_type=feed_type, device=device),
+        return Response(gen(camera_stream=camera_stream(feed_type, device, int(video_source)), feed_type=feed_type, device=device),
                         mimetype="multipart/x-mixed-replace; boundary=frame")
 
     elif feed_type == "camera_ip":
-        port = 5555
+        # port = 5555
         camera_stream = import_module('camera_ip').Camera
-        return Response(gen(camera_stream=camera_stream(feed_type, device, port), feed_type=feed_type, device=device),
+        return Response(gen(camera_stream=camera_stream(feed_type, device, int(video_source)), feed_type=feed_type, device=device),
                         mimetype="multipart/x-mixed-replace; boundary=frame")
 
 

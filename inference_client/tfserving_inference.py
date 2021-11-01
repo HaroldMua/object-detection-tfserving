@@ -17,11 +17,6 @@ class Detection:
     _FILE_LABELS = "coco"
     _THRESHOLD = 0.5
 
-    _SAVE_DETECTION = config["General"].getboolean("saved_img")
-    _SAVE_DIR = config["General"]["save_dir"]
-
-    _SKIP_FRAMES = config['General'].getboolean("skip_frames")
-
     @staticmethod
     def load_obj(name):
         with open('object_detection/data/' + name + '.pkl', 'rb') as f:
@@ -77,8 +72,3 @@ class Detection:
                 line_thickness=2
             )
             print("Amount of seconds to visualize:", time.time() - t0)
-
-
-
-
-
