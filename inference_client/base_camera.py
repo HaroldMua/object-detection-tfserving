@@ -58,7 +58,7 @@ class BaseCamera:
     last_access = {}  # time of last client access to the camera
     event = {}
 
-    def __init__(self, feed_type, device):
+    def __init__(self, feed_type, device, video_source_dict):
         """Start the background camera thread if it isn't running yet."""
         self.unique_name = (feed_type, device)
         BaseCamera.event[self.unique_name] = CameraEvent()
@@ -70,7 +70,7 @@ class BaseCamera:
 
             # start background frame thread
             BaseCamera.threads[self.unique_name] = threading.Thread(target=self._thread,
-                                                                    args=(self.unique_name))
+                                                                    args=(self.unique_name, video_source_dict))
             BaseCamera.threads[self.unique_name].start()
 
             # wait until frames are available
@@ -99,10 +99,10 @@ class BaseCamera:
         raise RuntimeError('Must be implemented by subclasses.')
 
     @classmethod
-    def opencv_thread(cls, unique_name):
+    def opencv_thread(cls, unique_name, video_source):
         device = unique_name[1]
 
-        frames_iterator = cls.opencv_frames(device)
+        frames_iterator = cls.opencv_frames(device, video_source)
         try:
             for cam_id, frame in frames_iterator:
                 BaseCamera.frame[unique_name] = cam_id, frame
@@ -149,12 +149,13 @@ class BaseCamera:
 
 
     @classmethod
-    def _thread(cls, *unique_name):
+    def _thread(cls, unique_name, video_source_dict):
         """Camera background thread."""
         feed_type, device = unique_name
         if feed_type == 'camera_opencv':
+            video_source = video_source_dict[device]
             print('Starting camera_opencv thread for device {}.'.format(device))
-            cls.opencv_thread(unique_name)
+            cls.opencv_thread(unique_name, video_source)
 
         elif feed_type == 'camera_ip':
             print('Starting camera_ip thread for device {}.'.format(device))
