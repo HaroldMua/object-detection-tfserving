@@ -2,9 +2,10 @@ from importlib import import_module
 import time
 import cv2
 from flask import Flask, render_template, Response, request
-
+from inference_client import thread_control as glv
 
 app = Flask(__name__)
+
 
 @app.route('/')
 def index():
@@ -18,12 +19,14 @@ def gen(camera_stream, feed_type, device):
 
     num_frames = 0
     total_time = 0
+    # 当device的active状态为False时，yield返回
     while True:
         time_start = time.time()
         cam_id, frame = camera_stream.get_frame(unique_name)   # from here get frame
         if frame is None:
             break
-
+        if not glv.get_device_status(device):
+            break
         num_frames += 1
         total_time += time.time() - time_start
         fps = num_frames / total_time
@@ -40,9 +43,12 @@ def gen(camera_stream, feed_type, device):
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 
+# 视频device与具体资源的对应字典
+# 例子：{1:'rst:test', 2:'0'}
 video_source_dict = {}
 
-@app.route('/video_feed')
+
+@app.route('/api/video_feed')
 def video_feed():
     """Video streaming route. Put this in the src attribute of an img tag."""
 
@@ -51,14 +57,16 @@ def video_feed():
     video_source = request.args.get('video_source')
 
     if device in video_source_dict:
+        # 保证字典中，device的唯一性
         video_source_dict.pop(device)
     video_source_dict[device] = video_source
-
+    glv.set_device_status(device, True)
     if feed_type == "camera_opencv":
         # video_source = "rtsp://admin:admin@192.168.11.103:8554/live"
         # video_source = 0
         camera_stream = import_module('camera_opencv').Camera
-        return Response(gen(camera_stream=camera_stream(feed_type, device, video_source_dict), feed_type=feed_type, device=device),
+        return Response(gen(camera_stream=camera_stream(feed_type, device, video_source_dict), feed_type=feed_type,
+                            device=device),
                         mimetype="multipart/x-mixed-replace; boundary=frame")
 
     elif feed_type == "camera_ip":
@@ -66,6 +74,15 @@ def video_feed():
         camera_stream = import_module('camera_ip').Camera
         return Response(gen(camera_stream=camera_stream(feed_type, device, video_source_dict), feed_type=feed_type, device=device),
                         mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
+# thread_control.init()
+@app.route('/api/video_feed_close')
+def video_feed_close():
+    device = request.args.get('device')
+    glv.set_device_status(device, False)
+    glv.get_device_status(device)
+    return Response({'msg': '1'})
 
 
 if __name__ == '__main__':

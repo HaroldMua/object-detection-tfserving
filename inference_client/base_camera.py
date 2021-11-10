@@ -1,5 +1,6 @@
 import time
 import threading
+from inference_client import thread_control as glv
 
 try:
     from greenlet import getcurrent as get_ident
@@ -75,6 +76,9 @@ class BaseCamera:
 
             # wait until frames are available
             while self.get_frame(self.unique_name) is None:
+                # if not glv.get_device_status(device):
+                #     print('base_camera while over')
+                #     break
                 time.sleep(0)
 
     @classmethod
@@ -94,15 +98,21 @@ class BaseCamera:
         raise RuntimeError('Must be implemented by subclasses.')
 
     @staticmethod
-    def opencv_frames(device):
+    def opencv_frames(device, video_source):
         """"Generator that returns frames from the camera."""
         raise RuntimeError('Must be implemented by subclasses.')
 
     @classmethod
     def opencv_thread(cls, unique_name, video_source):
+        print('opencv_thread in base_camera')
+        print('video_source:', video_source)
+        feed_type = unique_name[0]
         device = unique_name[1]
 
-        frames_iterator = cls.opencv_frames(device, video_source)
+        print('opencv_frames in use')
+        print('device', device)
+        print('video_source:', video_source)
+        frames_iterator = cls.opencv_frames(feed_type, device, video_source)
         try:
             for cam_id, frame in frames_iterator:
                 BaseCamera.frame[unique_name] = cam_id, frame
@@ -114,12 +124,14 @@ class BaseCamera:
                 if time.time() - BaseCamera.last_access[unique_name] > 60:
                     frames_iterator.close()
                     print('Stopping camera_opencv thread for device {} due to inactivity.'.format(device))
-                    pass
+                # if not glv.get_device_status(device):
+                #     print("base_camera device {} status False".format(device))
+                #     break
+
         except Exception as e:
             frames_iterator.close()
             print('Stopping camera_opencv thread for device {} due to error.'.format(device))
             print(e)
-
 
     @classmethod
     def ip_thread(cls, unique_name):
@@ -147,17 +159,18 @@ class BaseCamera:
             print('Stopping camera_ip thread for device {} due to error.'.format(device))
             print(e)
 
-
     @classmethod
     def _thread(cls, unique_name, video_source_dict):
         """Camera background thread."""
+        print('_thread in base_camera')
         feed_type, device = unique_name
         if feed_type == 'camera_opencv':
+            print('video_source_dict:', video_source_dict)
             video_source = video_source_dict[device]
+            print('video_source:', video_source)
             print('Starting camera_opencv thread for device {}.'.format(device))
             cls.opencv_thread(unique_name, video_source)
 
         elif feed_type == 'camera_ip':
             print('Starting camera_ip thread for device {}.'.format(device))
             cls.ip_thread(unique_name)
-
